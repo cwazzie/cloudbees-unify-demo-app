@@ -20,6 +20,7 @@ metadata:
         - governance-review
     - name: Staging
       jobs:
+        - security-review
         - deploy-staging
         - staging-validation
     - name: Production Approval
@@ -58,7 +59,7 @@ jobs:
     with:
       manifest: ${{ inputs.manifest }}
       environment: ${{ job.environment }}
-    needs: governance-review
+    needs: security-review
   staging-validation:
     needs: deploy-staging
     steps:
@@ -80,7 +81,9 @@ jobs:
             - Audit controls: validated
             - Status: **passed**
   production-approval:
-    needs: staging-validation
+    needs:
+      - staging-validation
+      - governance-review
     steps:
       - name: Production approval (demo talking point)
         uses: docker://alpine:3.20
@@ -129,3 +132,12 @@ jobs:
             | Change ticket | ${{ inputs.change_ticket }} |
 
             Release: **COMPLETE**
+  security-review:
+    needs: governance-review
+    timeout-minutes: 4320
+    delegates: cloudbees-io/manual-approval/custom-job.yml@v1
+    with:
+      instructions: Security approval for release.
+      disallowLaunchByUser: false
+      notifyAllEligibleUsers: false
+      approvers: All users for organization
