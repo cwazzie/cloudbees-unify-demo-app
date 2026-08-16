@@ -137,7 +137,7 @@ jobs:
     with:
       disallowLaunchByUser: false
       notifyAllEligibleUsers: false
-      approvers: Admins (System)
+      approvers: a103adec-8ade-11f1-bcfc-42010a83aedd
       approvalInputs: |
         Confirm:
           type: choice
