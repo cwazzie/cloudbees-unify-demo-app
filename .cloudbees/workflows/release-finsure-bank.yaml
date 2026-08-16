@@ -20,6 +20,7 @@ metadata:
         - governance-review
     - name: Staging
       jobs:
+        - security-review
         - deploy-staging
         - staging-validation
     - name: Production Approval
@@ -53,16 +54,14 @@ jobs:
             - Unit tests / security scans / approvals: verified
             - Audit evidence: **complete**
   deploy-staging:
-    needs:
-      - governance-review
     environment: staging
     uses: ./.cloudbees/workflows/deployer.yaml
     with:
       manifest: ${{ inputs.manifest }}
       environment: ${{ job.environment }}
+    needs: security-review
   staging-validation:
-    needs:
-      - deploy-staging
+    needs: deploy-staging
     steps:
       - name: Run smoke tests and release checks
         uses: docker://alpine:3.20
@@ -82,8 +81,7 @@ jobs:
             - Audit controls: validated
             - Status: **passed**
   production-approval:
-    needs:
-      - staging-validation
+    needs: staging-validation
     steps:
       - name: Production approval (demo talking point)
         uses: docker://alpine:3.20
@@ -101,16 +99,14 @@ jobs:
             - Change ticket: ${{ inputs.change_ticket }}
             - Decision: **approved** (simulated for demo)
   deploy-production:
-    needs:
-      - production-approval
+    needs: production-approval
     environment: prod
     uses: ./.cloudbees/workflows/deployer.yaml
     with:
       manifest: ${{ inputs.manifest }}
       environment: ${{ job.environment }}
   release-evidence:
-    needs:
-      - deploy-production
+    needs: deploy-production
     steps:
       - name: Publish release summary
         uses: docker://alpine:3.20
@@ -134,3 +130,11 @@ jobs:
             | Change ticket | ${{ inputs.change_ticket }} |
 
             Release: **COMPLETE**
+  security-review:
+    needs: governance-review
+    timeout-minutes: 4320
+    delegates: cloudbees-io/manual-approval/custom-job.yml@v1
+    with:
+      disallowLaunchByUser: false
+      notifyAllEligibleUsers: false
+      approvers: Admins (System)
