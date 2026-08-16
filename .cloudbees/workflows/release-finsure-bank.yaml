@@ -138,3 +138,11 @@ jobs:
       disallowLaunchByUser: false
       notifyAllEligibleUsers: false
       approvers: Admins (System)
+      approvalInputs: |
+        Confirm:
+          type: choice
+          options:
+            - Pass
+            - Fail
+          default: Fail
+          required: true
