@@ -20,6 +20,7 @@ metadata:
         - governance-review
     - name: Staging
       jobs:
+        - security-review
         - deploy-staging
         - staging-validation
     - name: Production Approval
@@ -58,7 +59,7 @@ jobs:
     with:
       manifest: ${{ inputs.manifest }}
       environment: ${{ job.environment }}
-    needs: governance-review
+    needs: security-review
   staging-validation:
     needs: deploy-staging
     steps:
@@ -131,3 +132,11 @@ jobs:
             | Change ticket | ${{ inputs.change_ticket }} |
 
             Release: **COMPLETE**
+  security-review:
+    needs: governance-review
+    timeout-minutes: 4320
+    delegates: cloudbees-io/manual-approval/custom-job.yml@v1
+    with:
+      disallowLaunchByUser: false
+      notifyAllEligibleUsers: false
+      approvers: Admins (System),a103adec-8ade-11f1-bcfc-42010a83aedd
